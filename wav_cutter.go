@@ -20,7 +20,6 @@ var maxError *float64
 var offsetEnd *float64
 var offsetStart *float64
 var verbose *bool
-var splitInHalf *bool
 var deleteSourceError *float64
 var deleteSourceRatioError *float64
 var srcFileIndex *int
@@ -41,7 +40,6 @@ func main() {
 	deleteSourceError = flag.Float64("delete-source-error", -1, "Delete files that were successfully cut and have error lte than specified.")
 	deleteSourceRatioError = flag.Float64("delete-source-ratio-error", -1, "Delete files that were successfully cut and have ratio error lte than specified")
 	verbose = flag.Bool("verbose", false, "Print all errors")
-	splitInHalf = flag.Bool("split-in-half", false, "Split each file in half and outpu a_<fn>.wav and b_<fn>.wav")
 	srcFileIndex = flag.Int("src-file-index", 0, "cut-args csv index for srcFile")
 	startSIndex = flag.Int("start-s-index", 1, "cut-args csv index for startS")
 	endSIndex = flag.Int("end-s-index", 2, "cut-args csv index for endS")
@@ -141,37 +139,14 @@ func cutRoutine(channel chan []string) {
 
 			start_s += *offsetStart
 			end_s += *offsetEnd
-			if *splitInHalf {
-				dur_s := end_s - start_s
-				startA, endA := start_s, start_s+dur_s/2
-				startB, endB := endA, end_s
 
-				cutWriter.source = filepath.Join(*fromDir, entry[*srcFileIndex])
-				cutWriter.start = float32(startA)
-				cutWriter.end = float32(endA)
-				cutWriter.dest = filepath.Join(*toDir, "a_"+entry[*outFileIndex])
-				err = cutWriter.write()
-				if err != nil && *verbose {
-					fmt.Println(entry, err)
-				}
-
-				cutWriter.source = filepath.Join(*fromDir, entry[*srcFileIndex])
-				cutWriter.start = float32(startB)
-				cutWriter.end = float32(endB)
-				cutWriter.dest = filepath.Join(*toDir, "b_"+entry[*outFileIndex])
-				err = cutWriter.write()
-				if err != nil && *verbose {
-					fmt.Println(entry, err)
-				}
-			} else {
-				cutWriter.source = filepath.Join(*fromDir, entry[*srcFileIndex])
-				cutWriter.start = float32(start_s + *offsetStart)
-				cutWriter.end = float32(end_s + *offsetEnd)
-				cutWriter.dest = filepath.Join(*toDir, entry[*outFileIndex])
-				err = cutWriter.write()
-				if err != nil && *verbose {
-					fmt.Println(entry, err)
-				}
+			cutWriter.source = filepath.Join(*fromDir, entry[*srcFileIndex])
+			cutWriter.start = float32(start_s + *offsetStart)
+			cutWriter.end = float32(end_s + *offsetEnd)
+			cutWriter.dest = filepath.Join(*toDir, entry[*outFileIndex])
+			err = cutWriter.write()
+			if err != nil && *verbose {
+				fmt.Println(entry, err)
 			}
 
 			if err == nil && (hasDiffError && hasRatioError && diffError <= *deleteSourceError && ratioError <= *deleteSourceRatioError) {
