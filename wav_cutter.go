@@ -144,6 +144,13 @@ func cutRoutine(channel chan []string) {
 			cutWriter.start = float32(start_s + *offsetStart)
 			cutWriter.end = float32(end_s + *offsetEnd)
 			cutWriter.dest = filepath.Join(*toDir, entry[*outFileIndex])
+
+			err = os.MkdirAll(filepath.Dir(cutWriter.dest), os.ModePerm)
+			if err != nil {
+				fmt.Println(entry, err)
+				continue
+			}
+
 			err = cutWriter.write()
 			if err != nil && *verbose {
 				fmt.Println(entry, err)
