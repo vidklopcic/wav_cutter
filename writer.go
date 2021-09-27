@@ -110,6 +110,7 @@ func (writer *WavCopyWriter) write() error {
 	bytes_cut_front := uint32(float32(src_header.ByteRate) * writer.start)
 	bytes_cut_end := uint32(float32(src_header.ByteRate) * (src_duration - writer.end))
 	cut_bytes := bytes_cut_front + bytes_cut_end
+	cut_bytes += cut_bytes % 2
 	if cut_bytes >= src_header.DataSize {
 		return fmt.Errorf("cannot cut if start is later than end of src file!")
 	}
